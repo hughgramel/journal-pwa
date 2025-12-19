@@ -36,15 +36,24 @@ function saveEntries(entries: JournalEntry[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(entries))
 }
 
-export function useJournal() {
-  const [entries, setEntries] = useState<JournalEntry[]>([])
-  const [isLoaded, setIsLoaded] = useState(false)
+// Initialize synchronously on client to avoid loading delay
+function getInitialEntries(): JournalEntry[] {
+  if (typeof window === 'undefined') return []
+  return getStoredEntries()
+}
 
+export function useJournal() {
+  // Initialize with localStorage data immediately on client
+  const [entries, setEntries] = useState<JournalEntry[]>(getInitialEntries)
+  const [isLoaded, setIsLoaded] = useState(() => typeof window !== 'undefined')
+
+  // Mark as loaded on mount (handles SSR case)
   useEffect(() => {
-    const stored = getStoredEntries()
-    setEntries(stored)
-    setIsLoaded(true)
-  }, [])
+    if (!isLoaded) {
+      setEntries(getStoredEntries())
+      setIsLoaded(true)
+    }
+  }, [isLoaded])
 
   useEffect(() => {
     if (isLoaded) {

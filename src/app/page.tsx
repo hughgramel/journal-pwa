@@ -34,7 +34,7 @@ const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxgJIm-9XXzmj
 export default function Home() {
   const { getEntryForDate, saveEntry, isLoaded } = useJournal()
   const { habits, isLoaded: habitsLoaded, addHabit, removeHabit } = useHabits()
-  const [currentDate, setCurrentDate] = useState(new Date())
+  const [currentDate, setCurrentDate] = useState(() => new Date())
   const [rating, setRating] = useState<string>('')
   const [sleepTime, setSleepTime] = useState('')
   const [wakeTime, setWakeTime] = useState('')
@@ -338,6 +338,38 @@ export default function Home() {
     const period = hour >= 12 ? 'PM' : 'AM'
     const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
     return `${displayHour}:${minute.toString().padStart(2, '0')} ${period}`
+  }
+
+  // Show loading skeleton during SSR/initial hydration
+  if (!isLoaded) {
+    return (
+      <main className="min-h-screen bg-background pb-8">
+        <header className="sticky top-0 z-10 border-b border-border bg-white px-4 py-4">
+          <div className="mx-auto flex max-w-2xl items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-6 w-6 text-electric-blue" />
+              <h1 className="text-xl font-bold text-foreground">ajournl.</h1>
+            </div>
+          </div>
+        </header>
+        <div className="mx-auto max-w-2xl px-4 py-6">
+          <div className="mb-6 flex items-center justify-center">
+            <div className="text-center">
+              <div className="h-8 w-32 animate-pulse rounded bg-gray-200 mx-auto mb-2" />
+              <div className="h-5 w-40 animate-pulse rounded bg-gray-100 mx-auto" />
+            </div>
+          </div>
+          <div className="space-y-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="rounded-lg border border-border bg-white p-4">
+                <div className="h-4 w-24 animate-pulse rounded bg-gray-200 mb-3" />
+                <div className="h-10 w-full animate-pulse rounded bg-gray-100" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </main>
+    )
   }
 
   return (

@@ -27,15 +27,24 @@ function saveHabits(habits: Habit[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(habits))
 }
 
-export function useHabits() {
-  const [habits, setHabits] = useState<Habit[]>([])
-  const [isLoaded, setIsLoaded] = useState(false)
+// Initialize synchronously on client to avoid loading delay
+function getInitialHabits(): Habit[] {
+  if (typeof window === 'undefined') return []
+  return getStoredHabits()
+}
 
+export function useHabits() {
+  // Initialize with localStorage data immediately on client
+  const [habits, setHabits] = useState<Habit[]>(getInitialHabits)
+  const [isLoaded, setIsLoaded] = useState(() => typeof window !== 'undefined')
+
+  // Mark as loaded on mount (handles SSR case)
   useEffect(() => {
-    const stored = getStoredHabits()
-    setHabits(stored)
-    setIsLoaded(true)
-  }, [])
+    if (!isLoaded) {
+      setHabits(getStoredHabits())
+      setIsLoaded(true)
+    }
+  }, [isLoaded])
 
   useEffect(() => {
     if (isLoaded) {
